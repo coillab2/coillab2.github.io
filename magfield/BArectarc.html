@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Rectangular Arc</title>
+  <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+  <style>
+.contentA{ width: 500px; height: 500px;}
+.contentB{ width: 300px; height: 500px;}
+.main{ display: flex;}
+  </style>
+  <py-env>
+- numpy
+- scipy
+  </py-env>
+</head>
+
+<body>
+<header>
+    <div align="center"><h2> Magnetic Field and Vector Potential from Rectangular Arc Segment</h2></div> 
+    <center>2022-8-30 (R.1)</center>
+    <center>Kiyoshi Yoshida</center>
+    <center>kiyoshi.yoshida@eagle.ocn.ne.jp</center>
+    <br>
+</header>
+
+<div class="main">
+<div class="contentA">
+  <table>
+  <tr><td>Radius a</td>        <td><input type="text" id="radius" value="0.5"/></td> <td>(m)</td></tr>
+  <tr><td>Radial Width Wr</td> <td><input type="text" id="wr" value="0.1"/></td> <td>(m)</td></tr>
+  <tr><td>Axial Length Wz</td> <td><input type="text" id="wz" value="0.5"/></td> <td>(m)</td></tr>
+  <tr><td>Current</td>         <td><input type="text" id="current" value="1"/></td> <td>(MA)</td></tr>
+  <tr><td>Start Angle th1</td> <td><input type="text" id="th1" value="0"/></td> <td>(deg)</td></tr>  
+  <tr><td>End Angle   th2</td> <td><input type="text" id="th2" value="180"/></td> <td>(deg)</td></tr>  
+  <tr><td>Position x</td>      <td><input type="text" id="xp" value="0.1"/></td><td>(m)</td></tr>
+  <tr><td>Position y</td>      <td><input type="text" id="yp" value="0.0"/></td><td>(m)</td></tr>
+  <tr><td>Position z</td>      <td><input type="text" id="zp" value="0.1"/></td><td>(m)</td></tr>
+  </table>
+  <button id="submit-button" type="submit" pys-onClick="main_3">Run</button>
+  <div id="msg1"></div>
+  <div id="msg2"></div>
+  <div id="msg3"></div>
+  <div id="msg4"></div>
+  <div id="msg5"></div>
+</div>
+<div class="contentB">
+    <img src=fig\12arcrect.gif>
+</div>
+</div>
+
+<py-script>
+from numpy import abs, pi, sqrt, log, arctan, sin, cos, arctan2
+from scipy import integrate
+# common data
+small_angl = 1.00e-6
+small_dist = 1.00e-6
+small_value = 1.00e-12
+
+def sgn(x):
+    if x >= 0.0:
+        return 1.0
+    else:
+        return -1.0
+
+def trans2(uo, vo, t):
+    s = sin(t)
+    c = cos(t)
+    up = c * uo - s * vo
+    vp = s * uo + c * vo
+    return up, vp
+
+def ba0x(t1, t2, r1, r2, lg, xp, zp):
+    r0 = 0.5*(r1 + r2)
+    co1 = cos(t1)
+    si1 = sin(t1)
+    si2 = sin(t2)
+    s = 0.0
+    for i in range(4):
+        if i == 0:
+            r = r1; z = -0.5*lg
+        elif i == 1:
+            r = r1; z = 0.5*lg
+        elif i == 2:
+            r = r2; z = 0.5*lg
+        else:
+            r = r2; z = -0.5*lg
+        zj = zp - z
+        rj = sqrt(xp**2 + r**2 - 2.0*xp*r*co1 + zj**2)
+        sg = sgn(z*(r0 - r))
+        s += sg*rj
+    b = (si2 - si1)*s
+    return b
+
+def ba0y(t1, t2, r1, r2, lg, xp, zp):
+    r0 = 0.5 * (r1 + r2)
+    co1 = cos(t1)
+    co2 = cos(t2)
+    s = 0.0
+    for i in range(4):
+        if i == 0:
+            r = r1; z = -0.5*lg
+        elif i == 1:
+            r = r1; z = 0.5*lg
+        elif i == 2:
+            r = r2; z = 0.5*lg
+        else:
+            r = r2; z = -0.5*lg
+        zj = zp - z
+        rj = sqrt(xp**2 + r**2 - 2.0*xp*r*co1 + zj**2)
+        sg = sgn(z*(r0 - r))
+        s += sg*rj
+    b = -(co2 - co1)*s
+    return b
+
+def ba0z(t1, t2, r1, r2, lg, xp, zp):
+    r0 = 0.5 * (r1 + r2)
+    co1 = cos(t1)
+    s = 0.0
+    for i in range(4):
+        if i == 0:
+            r = r1; z = -0.5*lg
+        elif i == 1:
+            r = r1; z = 0.5*lg
+        elif i == 2:
+            r = r2; z = 0.5*lg
+        else:
+            r = r2; z = -0.5*lg
+        zj = zp - z
+        rj = sqrt(xp**2 + r**2 - 2.0*xp*r*co1 + zj**2)
+        sg = sgn(z*(r0 - r))
+        s += sg*zj*log(rj + r)
+    b = (t1 - t2)*s
+    return b
+
+def bax(t, r1, r2, lg, xp, zp):
+    r0 = 0.5 * (r1 + r2)
+    if abs(t) < small_angl:
+        t = small_angl
+    co = cos(t)
+    s = 0.0
+    for i in range(4):
+        if i == 0:
+            r = r1; z = -0.5*lg
+        elif i == 1:
+            r = r1; z = 0.5*lg
+        elif i == 2:
+            r = r2; z = 0.5*lg
+        else:
+            r = r2; z = -0.5*lg
+        if abs(z) < small_dist:
+            z = small_dist  # to avoid divergence
+        zj = zp - z
+        rj = sqrt(xp**2 + r**2 - 2.0*xp*r*co + zj**2)
+        sg = sgn(z*(r0 - r))
+        s += sg*(rj + xp*co*log(rj + r - xp*co))*co
+    return s
+
+def bay(t, r1, r2, lg, xp, zp):
+    r0 = 0.5 * (r1 + r2)
+    if abs(t) < small_angl:
+        t = small_angl
+    co = cos(t)
+    si = sin(t)
+    s = 0.0
+    for i in range(4):
+        if i == 0:
+            r = r1; z = -0.5*lg
+        elif i == 1:
+            r = r1; z = 0.5*lg
+        elif i == 2:
+            r = r2; z = 0.5*lg
+        else:
+            r = r2; z = -0.5*lg
+        if abs(z) < small_dist:
+            z = small_dist  # to avoid divergence
+        zj = zp - z
+        rj = sqrt(xp**2 + r**2 - 2.0*xp*r*co + zj*zj)
+        sg = sgn(z*(r0 - r))
+        s += sg*(rj + xp*co*log(rj + r - xp*co))*si
+    return s
+
+def baz(t, r1, r2, lg, xp, zp):
+    r0 = 0.50 * (r1 + r2)
+    if abs(t) < small_angl:
+        t = small_angl
+    co = cos(t)
+    si = sin(t)
+    s = 0.0
+    if abs(xp) < small_dist:
+        xp = small_dist
+    for i in range(4):
+        if i == 0:
+            r = r1; z = -0.5*lg
+        elif i == 1:
+            r = r1; z = 0.5*lg
+        elif i == 2:
+            r = r2; z = 0.5*lg
+        else:
+            r = r2; z = -0.5*lg
+        if abs(z) < small_dist:
+            z = small_dist  # to avoid divergence
+        zj = zp - z
+        rj = sqrt(xp**2 + r**2 - 2.0*xp*r*co + zj*zj)
+        a = zj*(r - xp*co)/(rj*xp*si)
+        sg = sgn(z*(r0 - r))
+        s += sg*(xp*si*arctan(a) - zj*log(rj + r - xp*co)+xp*co*log(rj + zj))
+    return s
+
+def b_arc(xp, yp, zp, r1, r2, lg, cd, zh, ts, te):
+    pi2 = pi * 2.0
+    cc = -1.0e-7*cd  # x MU/4PI, adjust right-hand screw low
+    zq = zp - zh  # convert grovel to local coordination
+    rq = sqrt(xp**2 + yp**2)
+    if r1 > r2:
+        print('**ERROR at b_arc(), r1 < r2: ', r1, r2)
+        return 0.0, 0.0, 0.0
+    if abs(xp) < small_dist and abs(yp) < small_dist:
+        tha = 0.0
+    else:
+        tha = arctan2(yp, xp)
+    t1 = ts - tha
+    t2 = te - tha
+    if t1 > pi2 or t2 > pi2:
+        t1 = t1 - pi2
+        t2 = t2 - pi2
+    if t1 < -pi2 or t2 < -pi2:
+        t1 = t1 + pi2
+        t2 = t2 + pi2
+    if rq < small_dist:
+        bxx = cc*ba0x(t1, t2, r1, r2, lg, xp, zp)
+        byy = cc*ba0y(t1, t2, r1, r2, lg, xp, zp)
+        bzz = cc*ba0z(t1, t2, r1, r2, lg, xp, zp)
+    else:
+        b, e = integrate.quad(bax, t1, t2, args=(r1, r2, lg, rq, zq))
+        bx = cc * b
+        if abs(t1 - t2) >= pi2:
+            by = 0.0
+        else:
+            b, e = integrate.quad(bay, t1, t2, args=(r1, r2, lg, rq, zq))
+            by = cc * b
+        b, e = integrate.quad(baz, t1, t2, args=(r1, r2, lg, rq, zq))
+        bzz = cc*b
+        bxx, byy = trans2(bx, by, tha)
+    return bxx, byy, bzz
+
+def aa0x(t1, t2, r1, r2, lg, xp, zp):
+    r0 = 0.50*(r1 + r2)
+    if abs(t1) < small_angl:
+        t1 = small_angl
+    if abs(t2) < small_angl:
+        t2 = small_angl
+    co1 = cos(t1)
+    co2 = cos(t2)
+    s = 0.0
+    for i in range(4):
+        if i == 0:
+            r = r1; z = -0.5*lg
+        elif i == 1:
+            r = r1; z = 0.5*lg
+        elif i == 2:
+            r = r2; z = 0.5*lg
+        else:
+            r = r2; z = -0.5*lg
+        zj = zp - z
+        rj = sqrt(xp**2 + r**2 - 2.0*xp*r*co1 + zj**2)
+        sg = sgn(z*(r0 - r))
+        s += sg*(zj*rj + r**2*log(rj + zj))
+    ax = (co1 - co2)*0.5*s
+    return ax
+
+def aa0y(t1, t2, r1, r2, lg, xp, zp):
+    r0 = 0.50*(r1 + r2)
+    if abs(t1) < small_angl:
+        t1 = small_angl
+    if abs(t2) < small_angl:
+        t2 = small_angl
+    co1 = cos(t1)
+    si1 = sin(t1)
+    si2 = sin(t2)
+    s = 0.0
+    for i in range(4):
+        if i == 0:
+            r = r1; z = -0.5*lg
+        elif i == 1:
+            r = r1; z = 0.5*lg
+        elif i == 2:
+            r = r2; z = 0.5*lg
+        else:
+            r = r2; z = -0.5*lg
+        zj = zp - z
+        rj = sqrt(xp**2 + r**2 - 2.0*xp*r*co1 + zj**2)
+        sg = sgn(z*(r0 - r))
+        s += sg*(zj*rj + r**2*log(rj + zj))
+    ay = (si1 - si2)*0.5*s
+    return ay
+
+def aax(t, r1, r2, lg, xp, zp):
+    r0 = 0.50 * (r1 + r2)
+    if abs(t) < small_angl:
+        t = small_angl
+    if abs(xp) < small_dist:
+        xp = small_dist
+    co = cos(t)
+    si = sin(t)
+    s = 0.00
+    for i in range(4):
+        if i == 0:
+            r = r1; z = -0.5*lg
+        elif i == 1:
+            r = r1; z = 0.5*lg
+        elif i == 2:
+            r = r2; z = 0.5*lg
+        else:
+            r = r2; z = -0.5*lg
+        zj = zp - z
+        rj = sqrt(xp**2 + r**2 - 2.0*xp*r*co + zj**2)
+        b = ((xp*co - r)*rj - xp**2 - r**2 + 2.0*xp*r*co)/(zj*xp*si)
+        sg = sgn(z*(r0 - r))
+        s += sg*(zj*rj*0.50 + zj*xp*co*log(rj + r - xp * co)
+                 + (r**2*0.50 + xp**2*0.50 - xp**2*co**2)*log(rj + zj)
+                 + xp**2*si*co*arctan(b))*si
+    return s
+
+def aay(t, r1, r2, lg, xp, zp):
+    r0 = 0.50 * (r1 + r2)
+    if abs(t) < small_angl:
+        t = small_angl
+    if abs(xp) < small_dist:
+        xp = small_dist
+    co = cos(t)
+    si = sin(t)
+    s = 0.00
+    for i in range(4):
+        if i == 0:
+            r = r1; z = -0.5*lg
+        elif i == 1:
+            r = r1; z = 0.5*lg
+        elif i == 2:
+            r = r2; z = 0.5*lg
+        else:
+            r = r2; z = -0.5*lg
+        zj = zp - z
+        rj = sqrt(xp**2 + r**2 - 2.0*xp*r*co + zj**2)
+        b = ((xp*co - r)*rj - xp**2 - r**2 + 2.0*xp*r*co)/(zj*xp*si)
+        sg = sgn(z*(r0 - r))
+        s += sg*(zj*rj*0.50 + zj*xp*co*log(rj + r - xp*co)
+                 + (r**2*0.50 + xp**2*0.50 - xp**2*co**2)*log(rj + zj)
+                 + xp**2*si*co*arctan(b))*co
+    return -s
+
+def a_arc(xp, yp, zp, r1, r2, lg, cd, zh, ts, te):
+    pi2 = pi*2.0
+    zq = zp - zh  # convert grovel to local coordination
+    cc = -1.0e-7*cd  # x MU/4PI, adjust right-hand screw low
+    if r1 > r2:
+        print('**ERROR at a_arc(), r1 < r2: ', r1, r2)
+        return 0.0, 0.0
+    if abs(xp) < small_dist and abs(yp) < small_dist:
+        tha = 0.0
+    else:
+        tha = arctan2(yp, xp)
+    t1 = ts - tha
+    t2 = te - tha
+    if t1 > pi2 or t2 > pi2:
+        t1 = t1 - pi2
+        t2 = t2 - pi2
+    if t1 < -pi2 or t2 < -pi2:
+        t1 = t1 + pi2
+        t2 = t2 + pi2
+    rq = sqrt(xp ** 2 + yp ** 2)
+    if rq < small_dist:
+        axx = cc*aa0x(t1, t2, r1, r2, lg, xp, zp)
+        ayy = cc*aa0y(t1, t2, r1, r2, lg, xp, zp)
+    else:
+        a, e = integrate.quad(aax, t1, t2, args=(r1, r2, lg, rq, zq))
+        ax = cc*a
+        a, e = integrate.quad(aay, t1, t2, args=(r1, r2, lg, rq, zq))
+        ay = cc*a
+        axx, ayy = trans2(ax, ay, tha)
+    return axx, ayy
+
+def main_3(event):
+    ra = float(Element("radius").element.value)
+    wr = float(Element("wr").element.value)
+    wz = float(Element("wz").element.value)
+    ia = float(Element("current").element.value)*1.0e6
+    t1 = float(Element("th1").element.value)*pi/180.0
+    t2 = float(Element("th2").element.value)*pi/180.0
+    xp = float(Element("xp").element.value)
+    yp = float(Element("yp").element.value)
+    zp = float(Element("zp").element.value)
+    r1 = ra - wr*0.5
+    r2 = ra + wr*0.5
+    lg = wz
+    ja = ia/(wr*wz)
+    zh = 0.0
+    bx, by, bz = b_arc(xp, yp, zp, r1, r2, lg, ja, zh, t1, t2)
+    ax, ay = a_arc(xp, yp, zp, r1, r2, lg, ja, zh, t1, t2)
+    document.getElementById("msg1").innerHTML = "Bx (T):   "+ str(bx)
+    document.getElementById("msg2").innerHTML = "By (T):   "+ str(by)
+    document.getElementById("msg3").innerHTML = "Bz (T):   "+ str(bz)
+    document.getElementById("msg4").innerHTML = "Ax (Tm):  "+ str(ax)
+    document.getElementById("msg5").innerHTML = "Ay (Tm):  "+ str(ay)
+</py-script>
+
+<footer><a href="mailto:kiyoshi.yoshida@eagle.ocn.ne.jp">Questions to Kiyoshi Yoshida</a></div>
+</body>
+</html>
