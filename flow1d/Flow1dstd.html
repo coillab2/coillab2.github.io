@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <title>Flow 1D Steady</title>
+</head>
+
+<body>
+  <center><h1>定常１次元圧縮性流体</h1></center>
+  <center>2023-6-28 Rev.1.1</center>
+  <center>吉田 清</center>
+  <center>kiyoshi.yoshida@eagle.ocn.ne.jp</center>
+
+<h3>1. はじめに</h3>
+圧縮性流れの中の定常１次元圧縮性流れの解析について述べる。水平におかれた配管に流れる気体で、摩擦による圧損と、入熱がある場合の圧力、温度、流速を求める。流体は、理想気体でなく、臨界状態の付近の物性を含む実存気体を扱う。<br>
+
+<h3>2.	熱力学の基本式</h3>
+定常1次元圧縮性かつ実存気体に圧損と入熱があり、流体解析はArp<a href="Arp">[1]</a>に示されている。しかし、計算根拠が示されていないので、流体の基本式から求める。 <br> 
+定常１次元圧縮性流体の連続の式、運動量、エネルギーの式(1,)(2)(3)に示す。<br>
+\[\frac{d\rho}{\rho}+\frac{dv}{v}=0 \tag{1} \]
+\[dP+\frac{4{\ \tau}_w}{D}dx+\rho vdv=0 \tag{2} \]
+\[dh+vdv=0 \tag{3} \]
+せん断応力をFanningの管摩擦係数f(4)と、式(1)の変形式(5)により、<br>
+\[\tau_w=\frac{1}{2}f\rho v^2 \tag{4}\]
+式(2)は式(5)になる。<br>
+\[dP=-\frac{2f\ \rho v^2}{D}dx+v^2d\rho \tag{5}\]
+ここで、質量流束 \(G=\frac{m}{A}=\rho v\) を用いるとArpの式(A1)が得られる。<br>
+\[dP=-\frac{2\ G^2}{\rho D}fdx+\frac{\ G^2}{\ \rho^2}d\rho \tag{6}\]
+<br>
+実存気体の密度ρは、圧力Pと温度Tの式(7)の関数になる。<br>
+\[dP=-\frac{2\ G^2}{\rho D}fdx+\frac{\ G^2}{\ \rho^2}d\rho \tag{7}\]
+さらに、圧縮率の関係式<a href="#Saad">[2]</a>\(K\equiv\frac{1}{\rho}\left(\frac{d\rho}{dP}\right)_T\), \(\beta\equiv-\frac{1}{\rho}\left(\frac{d\rho}{dT}\right)_P\) 
+から式(8)になる。Arpの式(A3)と符号が違う。<br>
+\[d\rho=\rho KdP-\rho\beta dT \tag{8} \]
+式(6)は式(8)から式(9)になる
+\[\left(1-\frac{KG^2}{\rho}\right)\frac{dP}{dx}=-\frac{2\ G^2}{\rho D}f+\frac{\beta\ G^2}{\ \rho^2}\frac{dT}{dx} \tag{9} \]
+<br><br>
+入熱qはエンタルピーHと運動エネルギー \(\frac{v^2}{2}\)からなり、式(10)に示す。<br>
+\[q=\frac{GD}{4}\frac{\partial}{\partial P}\left(H+\frac{v^2}{2}\right)\frac{dP}{dx}+\frac{GD}{4}\frac{\partial}{\partial T}\left(H+\frac{v^2}{2}\right)\frac{dT}{dx}\ \tag{10} \]
+ここで、ジュール-トンプソン効果などの関係式から、式(11)になる。
+\[\psi={-\frac{1}{C_p}\left(\frac{dH}{dP}\right)}_T,\ \ C_p\equiv\left(\frac{dH}{dT}\right)_T,\ \ \frac{d}{dp}\left(\frac{v^2}{2}\right)=v\left(\frac{dv}{dP}\right)=-v^2K\]
+\[q=-\frac{GD}{4}\left(\psi C_P+v^2K\right)\frac{dP}{dx}+\frac{GD}{4}\left(C_P-v^2\beta\right)\frac{dT}{dx}\ \tag{11} \]
+式(9)と(11)から、\(\frac{dP}{dx}\), \( \frac{dT}{dx}\) が求まり、Arpの式(A7)(A8)(A9)と一致する。<br>
+\[\frac{dP}{dx}=\frac{\left(-\frac{2G^2f}{\rho D}+\frac{4qG\beta}{\rho D\left(C_P-v^2\beta\right)}\right)}{\left(1-\frac{G^2}{\rho}\left(K+\beta\varphi\right)\right)} \tag{12} \]
+\[\frac{dT}{dx}=\frac{\left(-\frac{2G^2f\varphi}{\rho D}+\frac{4q}{GD\left(C_P-v^2\beta\right)}\right)}{\left(1-\frac{G^2}{\rho}\left(K+\beta\varphi\right)\right)} \tag{13} \]
+\[\varphi=\frac{\psi C_P+v^2K}{C_P-v^2\beta} \tag{14}\]
+また, 最近の論文はダルジー管摩擦係数 f<SUB>D</SUB>=4f を用いることが多いので、解析には以下の式を用いる。<br>
+\[\frac{dP}{dx}=\frac{\left(-\frac{G^2f_D}{2\rho D}+\frac{4qG\beta}{\rho D\left(C_P-v^2\beta\right)}\right)}{\left(1-\frac{G^2}{\rho}\left(K+\beta\varphi\right)\right)} \tag{15} \]
+\[\frac{dT}{dx}=\frac{\left(-\frac{G^2f_D\varphi}{2\rho D}+\frac{4q}{GD\left(C_P-v^2\beta\right)}\right)}{\left(1-\frac{G^2}{\rho}\left(K+\beta\varphi\right)\right)} \tag{16} \]
+<br>
+<h3>3. 管摩擦係数</h3>
+管の摩擦係数は、Arpの式(2)では、Fanningの式が(17)示されている。ただし、レイノルズ数Reの乗数が負の記号が抜けている。
+\[f_F=0.046{Re}^{-0.2},\ \ Re=\frac{\rho vD}{\mu}\ \tag{17}\]
+しかし、最近は、Darcyの管摩擦係数f<SUB>D</SUB>を用い、乱流はColebrookの式(18)を用いるようになった。Dが管の内径、εが管の面粗さで、式(18)が一般的に使われる。<br>
+\[\frac{1}{\sqrt{f_D}}=-2{log}_{10}\left(\frac{\varepsilon}{3.7 D}+\frac{2.51}{Re\sqrt{f_D}}\right)\ \tag{18} \]
+ただし、式(18)は、陰方程式を解く必要があるため、直接計算できる近似式がBrkic<a href="#Brkic">[3]</a>の式(3)が(18)、式(6)が(19)によって示されている。<br>
+\[\frac{1}{\sqrt{f_D}}=0.8686\left[B-C+\frac{C}{B+A}\right]\  \tag{18} \]
+\[\frac{1}{\sqrt{f_D}}=0.8686\left[B-C+\frac{1.0119 C}{B+A}+\frac{C-2.3849}{\left(B+A\right)^2}\right]\ \tag{19} \]
+\[A=\frac{Re \varepsilon}{0.087D}\ ,\ \ B=ln\left(\frac{Re}{2.18}\right)\ ,\ \ C=\ln{\left(B+A\right)}\]
+摩擦係数の計算結果をColebrookの方程式を解いた結果をFig.1に示す。Fanningは、誤差が大きくて大きな誤差がある。一方、Brkicの提案している式(6)の値は、Colebrookの値との誤差は±0.01%以下とよく一致するので、数値解析には便利である。<br>
+<div style="text-align: center"><img src="fig/stdfig1a.gif" width="400"><br>
+  (a)	Friction of Fanning and Colebrook
+</div>
+<div style="text-align: center"><img src="fig/stdfig1b.gif" width="400"><br>
+  (b)Friction of Brkic f(3) & f(6) and Colebrook
+</div>  
+<div style="text-align: center"><img src="fig/stdfig1c.gif" width="400"><br>
+  (c)Error of Fanning
+</div>  
+<div style="text-align: center"><img src="fig/stdfig1d.gif" width="400"><br>
+  (d)Error of Brkic f(3) & f(6)
+</div>  
+<center>Fig. 1 Friction factor and error of Fanning and Brkic formula</center>
+<br>
+<h3>4.	気体の物性</h3>
+実存気体のなかのヘリウム物性は、NISTのREFPROP<a href="#REFPROP">[4]</a>やCryosoftのHEPACK<a href="#HEPACK">[5]</a>があるが有償である。一方、CoolProp<a href="#CoolProp">[6]</a>は、無償であり、ECXELやPythonとのインターフェースが用意されているので、便利である。特に、Pythonの場合は、以下のコマンドだけで使用できる。<br>
+&nbsp;&nbsp;>pip install CoolProp <br>
+各物性は、以下の関数で求めることができる。
+<table>
+  <tr><td>密度 </td><td>PropsSI('D','T',t0,'P',p0,fluid)</td> <td>Density</td></tr>
+  <tr><td>粘性係数 </td><td>PropsSI('V','T',t0,'P',p0,fluid)</td> <td>Viscosity</td></tr>
+  <tr><td>\(\left(\frac{d\rho}{dP}\right)_T\) </td><td>PropsSI('d(D)/d(P)|T','T',t0,'P',p0,fluid)  </td> <td>Compressibility</td></tr>
+  <tr><td>\(\left(\frac{d\rho}{dT}\right)_P\) </td><td>PropsSI('d(D)/d(T)|P','T',t0,'P',p0,fluid)  </td> <td>Expansivity</td></tr>
+  <tr><td>Cp </td><td>PropsSI('C','T',t0,'D',r0,fluid)</td> <td>Isobaric heat capacity</td></tr>
+  <tr><td>\({-\frac{1}{C_p}\left(\frac{dH}{dP}\right)}_T\) </td><td>PropsSI('d(H)/d(P)|T','T',t0,'P',p0,fluid)</td> <td>Isenthalpic expansion</td></tr>
+</table>
+<br>
+<h3>5.	数値解析</h3>
+数値解析では、式(15)(16)を、管の長手方向を、細かいdxごとに、圧力Pと温度Tから密度ρを求める必要がある。実用的には、50-100分割程度にすると誤差が少なくなる。数100mの管に臨界付近のヘリウムを流した実験がDean<a href="#Dean">[7]</a>によってFig. 2に示された。<br>
+圧力低下を求めるためには、管摩擦係数 f<SUB>D</SUB>が必要で、そのため銅管の内面の面粗さεが必要になる。ヘリウムで管摩擦係数の実験がDaney<a href="#Daney">[8]</a>によって報告がFig.4にされている。検算をすると、εは5μm程度で、実験結果と一致することが解った。<br>
+その実験を本数値計算で求めものがTable 1である。流量の実測値にたいして、計算結果は3%程度の誤差であった。DeanのFig.5の計算結果をFig. 4に示す。<br>
+<center>Table 1 Comparison between experimental measurement and this analysis
+<table border="1">
+  <tr align="center"><td>Dean Figure</td><td>Dean measurement</td><td>This Analysis</td><td>Error (%)</td></tr>
+  <tr align="center"><td>Fig.3</td><td>0.98</td><td>1.01</td><td>3.22</td></tr>
+  <tr align="center"><td>Fig.4</td><td>3.00</td><td>3.09</td><td>3.05</td></tr>
+  <tr align="center"><td>Fig.5</td><td>3.35</td><td>3.58</td><td>0.73</td></tr>
+</table>
+</center>
+<br>
+<div style="text-align: center"><img src="fig/stdfig2.gif" width="400"><br>
+  Fig. 2. Pressure and temperature profiles with 4.8-atm pressure loss. Solid line is  computed value. Computer data: m = 3.7 g/sec, ID = 4.8 mm, Q = 0.09 W/m, Pin = 11.7 atm, Tin=9.81 K, f=0.005, and Re = 3 to 4 X 10<sup>5</sup>. Measured flow = 3.55 g/sec.<a href="#Dean">[7]</a>
+</div> <br>
+<div style="text-align: center"><img src="fig/stdfig3.gif" width="400"><br>
+  Fig. 3. Friction factor for near-critical helium in curved cylindrical tubes: d = 3.99 mm, D/d= 194 and L/d- 4.6 X 104 <a href="#Daney">[8]</a>
+</div> <br>
+<div style="text-align: center"><img src="fig/stdfig4.gif" width="600"><br>
+  Fig. 4.  Pressure, temperature, density and velocity profile in case of Fig. 5 in Dean<a href="#Dean">[7]</a>
+</div> <br>
+
+<h3>6.	まとめ</h3>
+実存気体の物性の値を用いた圧縮性気体の流体解析は、1972年にArpから報告のあった方法と公開された物性プログラムで数値解析が可能になった。付録のPythonプログラムを用いて容易に計算できる。<br>
+また、解析を始めるきっかけになったのは、MITのHamilton<a href="#Hamilton">[9]</a>の論文で、MATLABのプログラムを含んでいたので計算した結果は、本計算と全く同一の結果であった。しかし、解析式がArp[1]と違っていたため、Arpの式の導入を詳しく調べたのが2章である。<br>
+<br>
+<h3>記号</h3>
+<table>
+  <tr><td>ρ</td><td>密度</td><td>kg/m<sup>3</sup></td><td>Density</td></tr>
+  <tr><td>v</td><td>速度</td><td>m/s</td><td>Fluid velocity</td></tr>
+  <tr><td>P</td><td>圧力</td><td>Pa</td><td>Pressure</td></tr>
+  <tr><td>τ<SUB>w</SUB></td><td>せん断応力</td><td>Pa</td><td>Wall shear stress</td></tr>
+  <tr><td>D</td><td>等価内直径</td><td>m</td><td>Hydraulic diameter of a duct</td></tr>
+  <tr><td>x</td><td>座標</td><td>m</td><td>Coordination x direction</td></tr>
+  <tr><td>h</td><td>エンタルピー</td><td>J/kg</td><td>Enthalpy</td></tr>
+  <tr><td>f</td><td>ファニング管摩擦係数</td><td>-</td><td>Fanning friction factor</td></tr>
+  <tr><td>f<SUB>D</SUB></td><td>ダルジー管摩擦係数</td><td>-</td><td>Darcy friction factor</td></tr>
+  <tr><td>K</td><td>等温圧縮率</td><td>1/Pa</td><td>Isothermal compressibility</td></tr>
+  <tr><td>β</td><td>体膨張係数</td><td>1/K</td><td>Volume expansion</td></tr>
+  <tr><td>m</td><td>質量流量</td><td>kg/s</td><td>Math flow rate</td></tr>
+  <tr><td>G</td><td>質量流速</td><td>kg/(m<SUP>2</SUP>s)</td><td>Mass flux</td></tr>
+  <tr><td>q</td><td>入熱</td><td>W/m<SUP>2</SUP></td><td>Heat flux</td></tr>
+  <tr><td>Ψ</td><td>ジュール-トンプソン効果</td><td>K/Pa</td><td>Joule-Thompson coefficient</td></tr>
+  <tr><td>Re</td><td>レイノルズ数</td><td>-</td><td>Reynolds number</td></tr>
+  <tr><td>ε</td><td>管の粗さ</td><td>m</td><td>Roughness of inner pipe surface</td></tr>
+  <tr><td>μ</td><td>粘性係数</td><td>Pa&middot;s</td><td>Dynamic viscosity</td></tr>
+</table>
+</center>
+<br>
+
+<h3>参考文献</h3>
+<ol>
+ <li> <a name="Arp"></a>V. Arp, Forced flow, single-phase helium cooling system, Advances in Cryogenic Engineering 17 (1972) 342-351
+ <li> <a name="Saad"></a>M.A. Saad, Compressible Fluid Flow, Prentice-Hall Inc. (1985), pp.12-17
+ <li> <a name="Brkic"></a> D. Brkic, et al., Accurate and efficient explicit approximations of the Colebrook flow friction equation based on the Wright-Omega function, MDPI Mathematics 7-1(2019)34
+ <li> <a name="REFPROP"></a>	REFPROP, https://www.nist.gov/srd/refprop
+ <li> <a name="HEPACK"></a> HEPACK, https://htess.com/hepak/
+ <li> <a name="CoolProp"></a> CoolProp, http://www.coolprop.org/
+ <li> <a name="Dean"></a> J. M. Dean, et al., Temperature profiles in a long gaseous-helium-cooled tube, Advances in Cryogenic Engineering 23 (1978)250-254
+ <li> <a name="Daney"></a> D. E. Daney, et al, Friction factor for flow of near-critical helium in curved tubes, Cryogenics, 18-4 (1978) 345-348
+ <li> <a name="Hamilton"></a> B. Hamilton, Analysis of Cryogenic Cooling of Toroidal Field Magnets for Nuclear Fusion Reactors, MIT (2021), https://dspace.mit.edu/handle/1721.1/144277
+</ol>
+
+
+
+<h3>付録</h3>
+定常１次元圧縮性流体 Python プログラム Flow1Dstd.py (入力を改訂Rev.1.1)<br>
+<pre>
+<code>
+
+  # Flow1Dstd.py :Steady flow for one-dimensional pipe 
+  # V. Arp, Forced flow, single-phase helium cooling system, Advances in 
+  #   Cryogenic Engineering 17 (1972) 342-351
+  # J. M. Dean, Temperature profiles in a long gaseous-helium-cooled tube,
+  #   Advances in Cryogenic Engineering 23 (1978)250-254
+  # fluid propaties by coolprop
+  # 2023-6-27 K. Yoshida
+  # 
+  from matplotlib import pyplot as plt
+  from numpy import zeros, linspace, pi, log
+  from CoolProp.CoolProp import PropsSI
+  fd_out=0    # file descriptor of list output 
+  
+  def main():
+    global fd_out
+    fd_out=open('flow1dstd-out.txt','w')  # save data file
+    fdcsv=open('flow1dstd-out.csv','w')   # save csv file
+    # Verify test results by Dean Fig.5
+    pin = 1170000.     # inlet pressure (Pa)
+    tin = 9.81         # inlet temperature (K)
+    diam = 0.0048      # Diameter of pipe (m)
+    roug = 5.0e-6      # roughness (m)   1.5e-5    
+    mdot = 3.576e-3    # Mass flow (kg/s) 3.121e-3
+    heat = 5.968       # external heating (W/m)
+    leng = 321.1       # Total Length (m)
+    step = 100         # number of steps
+    fluid = "Helium"   # fluid Helium Nitogen, Water
+    outputs("Flow 1D steady condition: Flow1Dstd.py")
+    while True:
+      # input
+      diam=inpfunc("Diameter of pipe (m),Stop<0",diam) 
+      if diam<0.0:
+        break
+      leng=inpfunc("Length of pipe (m)",leng) 
+      pin=inpfunc("Inlet pressure (Pa)",pin) 
+      tin=inpfunc("Inlet temperature (K)",tin) 
+      mdot=inpfunc("Mass flow (kg/s)",mdot) 
+      heat=inpfunc("External Heat (W/m)",heat) 
+      step=inpfunc("Division of length",step) 
+      fluid=inpfunc("Fluid",fluid)
+      outputs("Input data")
+      outputs("Inlet pressure: {:4f}, Inlet temperature: {:4f} ".format(pin,tin))
+      outputs("Mass flow: {:4f}, External Heat: {:4f} ".format(mdot,heat))
+      outputs("Division of length {:d}, Fluid: {:s} ".format(step,fluid))
+      outputs("Results")
+      # formula
+      dx = leng/step    # distance between points (m)
+      qht = heat
+      da = diam
+      ar = pi*da**2/4   # Area circular channel  (m^2)
+      gm = mdot/ar       # Flow density (kg/s/m^2)
+      stp=step+1
+      pos = linspace(0, step*dx, stp)
+      p = zeros(stp)   # Pressure (Pa)
+      t = zeros(stp)   # Temperature (K)
+      r = zeros(stp)   # Density (kg/m^3)
+      v = zeros(stp)   # Velocity (m/s)
+      mu = zeros(stp)  # Viscosity (Pa*s)
+      # Initial condition
+      fri,re = stdinit(p,t,r,v,mu,pin,tin,gm,da,roug,fluid)
+      outputs("Inlet, Fric: {:4f}, Rey: {:4f} ".format(fri,re))
+      # Steady state calculation
+      fri,re, i = stdana(p,t,r,v,mu,dx,gm,qht,da,roug,fri,fluid,stp)
+      outputs("Outlet, Fric: {:4f}, Rey: {:4f} ".format(fri,re))
+      outputs("Tin= {:4f}, Tout= {:4f}, i= {:d}".format(t[0],t[i],i))
+      outputs("Pin= {:4e}, Pout= {:4e}, dP= {:4e}".format(p[0],p[i],(p[0]-p[i])))
+      outputs("Rin= {:4f}, Rout= {:4f} ".format(r[0],r[i]))
+      outputs("Vin= {:4f}, Vout= {:4f} ".format(v[0],v[i]))
+      outputs("mdot-in= {:4f}, mdot-out= {:4f} "
+        .format(r[0]*v[0]*ar,r[i]*v[i]*ar))
+      # save data
+      fdcsv.write("#Flow 1D sateady output\n")
+      fdcsv.write("x, p, t, v\n")
+      for i in range(0, stp):
+        list=[str(pos[i]), str(p[i]), str(t[i]), str(v[i]),"\n"]
+        fdcsv.write(" ,".join(list))
+      #plot
+      plot(pos,p,t,r,v)
+    # exit loop
+    print("End of Flow1Dstd.py (~?~)")
+    fd_out.close()
+    fdcsv.close()
+    # -- end --
+  
+  # inlet condition
+  def stdinit(p,t,r,v,mu,pin,tin,gm,da,roug,fluid):
+    p[0] = pin      # Pressure (Pa)
+    t[0] = tin      # Temperature (K)
+    r[0] = PropsSI('D', 'T', t[0], 'P', p[0], fluid)  # Density (kg/m3)
+    v[0] = gm/r[0]   # velocity (m/s)
+    mu[0] = PropsSI('V', 'T', t[0], 'P', p[0], fluid)
+    # Friction
+    re = r[0]*v[0]/mu[0]*da     # Reinold number
+    fri = fribrk(re, da, roug)
+    return fri,re
+  
+  # analysis along length
+  def stdana(p,t,r,v,mu, dx,gm,qht,da,roug,fri,fluid,stp):
+    for i in range(1, stp):
+      r0 = r[i-1]; t0 = t[i-1]; p0 = p[i-1]; v0 = v[i-1]
+      kk = PropsSI('d(D)/d(P)|T', 'T', t0, 'P', p0, fluid)/r0
+      bb = -PropsSI('d(D)/d(T)|P', 'T', t0, 'P', p0, fluid)/r0
+      cp = PropsSI('C', 'T', t0, 'D', r0, fluid)
+      jt = -PropsSI('d(H)/d(P)|T', 'T', t0, 'P', p0, fluid)
+      d1 = (jt + v0**2*kk)/(cp - v0**2*bb)
+      e1 = 1.0 - gm**2/r0*(kk + bb*d1)
+      dp = (-gm**2*fri/(2*r0*da) + 4*qht*gm*bb/(r0*da*(cp - v0**2*bb)))/e1
+      dt = (-gm**2*fri*d1/(2*r0*da) + 4*qht/(gm*da*(cp - v0**2*bb)))/e1
+      p[i] = p0 + dp*dx
+      t[i] = t0 + dt*dx
+      if p[i] < 10:   # only subsonic
+          # Flow has gone sonic
+          print('Rarefied gas reached')
+          exit()
+      r[i] = PropsSI('D', 'T', t[i], 'P', p[i], fluid)
+      v[i] = gm/r[i]
+      mu[i] = PropsSI('V', 'T', t[i], 'P', p[i], fluid)
+      re = r[i]*v[i]/mu[i]*da
+      fri = fribrk(re, da, roug)
+    return fri, re, i
+  
+  def fribrk(r, d, e):   # Darcy Friction Factor by Brkic Equation formula(6)
+    if r > 2500:
+      a = r*e/d/8.0878
+      b = log(r/2.18)
+      c = log(a + b)
+      g = 0.8686*(b + 1.0119*c/(a + b) - c + (c - 2.3849)/(a + b)**2)
+      return 1/g**2
+    else:
+      return 64/r
+  
+  def plot(pos,p,t,r,v):
+    # plot 
+    fig = plt.figure(figsize=(12, 8))
+    ax1 = fig.add_subplot(2, 2, 1)
+    ax2 = fig.add_subplot(2, 2, 2)
+    ax3 = fig.add_subplot(2, 2, 3)
+    ax4 = fig.add_subplot(2, 2, 4)
+    ax1.plot(pos, p) 
+    ax1.set_ylabel('Pressure (Pa)')
+    ax1.set_xlabel('Position (m)')
+    ax1.grid()
+    ax2.plot(pos, t) 
+    ax2.set_ylabel('Temperature (K)')
+    ax2.set_xlabel('Position (m)')
+    ax2.grid()
+    ax3.plot(pos, r) 
+    ax3.set_ylabel('Density (kg/m^3)')
+    ax3.set_xlabel('Position (m)')
+    ax3.grid()
+    ax4.plot(pos, v) 
+    ax4.set_ylabel('Velocity (m/s)')
+    ax4.set_xlabel('Position (m)')
+    ax4.grid()
+    plt.show()
+    
+  # General Functions
+  # outputs(): print CRT and file
+  def outputs(sti):
+    print(sti)
+    print(sti, file=fd_out)
+  
+  # keyboard input
+  def inpfunc(msg,x):
+      s=input(msg+" : "+str(x)+" : ")
+      if s=='':
+          y=x
+      else:    
+          y=float(s)
+      return y
+  
+  if __name__ == "__main__":
+      main()
+   
+</code>
+</pre>
+
+<footer><a href="mailto:kiyoshi.yoshida@eagle.ocn.ne.jp">Questions to Kiyoshi Yoshida</a></div>
+
+</body>
+</html>
