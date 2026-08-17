@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <script type="text/javascript" id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+  <title>Python Note</title>
+</head>
+
+<body>
+  <center><h1>Pythonの使い方</h1></center>
+  <center>2023-2-21 (R.1.1)</center>
+  <center>吉田 清</center>
+  <center>kiyoshi.yoshida@eagle.ocn.ne.jp</center>
+
+<h3>1. はじめに</h3>
+最近、科学計算でよく紹介されるPythonをインストールして、Windowsで使えるようにする。Pythonは、文法が単純なので、公式などの式の入力は、EXCELのVBAと比較すると簡単である。インタープリターであるので、即座に動作するのが便利である。同様のソフトにMatlabがあるが有料であるが、Pythonは無料のため、誰でも利用できるので、計算方法の配布に便利である。数値解析のPythonの参考文献<a href="#Downey_2015">[1]</a><a href="#Aikawa_2018">[2]</a><a href="#Nakakuki_2016">[3]</a><a href="#Pine_2014">[4]</a>に示す。
+
+<h3>2. Pythonのインストール</h3>
+<h4>2.1	Python.orgから </h4>
+https://www.python.org/からWindows64bit版最新版をダウンロードしてインストールする。インストール先は、C:\bin\python などのように短いほうが便利である。<br>
+a)	インストールの最初の画面で、Customize installation を選択、Add Python 3.11 to PATH にチェックを入れる。<br>
+b)	Advanced Option画面でCustomize install locationにc:\bin\python などと短いディレクトリーにしておく。<br>
+
+<h4>2.2	モジュールのインストール </h4>
+<h4> </h4>
+Pythonの起動は、CMDやPowerShaellではpyでも起動する。	
+	$ python
+科学計算モジュール numpy,  scipy, matplotlib は CMDを起動して、以下でインストールする。<br>
+$ pip install numpy scipy matplotlib <br>
+その他のモジュールpandas ipython jupyter sympy nose などは必要な時にいつでもインストールできる。
+
+<h4>2.3	Update </h4>
+<h5>2.3.1	Python本体のUpdate</h5>
+Python本体のUpdateは、新しいInstallerをPython.orgからダウンロードして、Updateを選択する。
+
+<h5>2.3.2	一括Update</h5>
+Python本体のUpdateはできないが、モジュールの一括Updateは以下のコマンドをCMDでpip-review --auto を実行。
+
+<h3>3.	総合開発環境  </h3>
+Pythonの起動はエディターとコマンドプロンプトで使うのも高速であるが、IDLEはエディターを含むのでの設定が使えて便利である。右クリックから移動できる。実体は、C:\bin\python\Lib\idle.batである。<br>
+Pythonプログラムの作成は専門の総合開発環境を用いると便利である。フリーではPyCharmやVisual Code Studioが使いやすい。
+
+
+<h3>4.	Pythonプログラミングの要点 </h3>
+Python言語は、簡単な記述ができる。
+構文は以下の点が違うぐらいで、他のFortranやCなどと同一である。参考文献を参考に。 
+<ol> 
+<li>インテンドで構文が規則になっている。Pythonの推奨は空白4文字。</li>
+<li>コメントは、#以降。"""で複数行のコメント"""</li>
+<li>継続行は"\"。</li>
+<li>Pythonカラム数の制限はないが、やはり、80文字すると2画面で表示できるので都合がよい。</li>
+<li>関数は、from numpy import pi, sin, cosのように記載すると、わかりやすい。</li>
+<li>変数の型宣言不要で、入力時に決まる。</li>
+</ol>
+<h4>4.1.	数値計算 </h4>
+Pythonは数値解析を行うに必要な主な特殊関数はNumPy [5]とScipy [6]に準備されている。また、結果の図化もmatplotlib [6]を用いると容易である。他のFortranやC言語では、独自に特殊関数などを準備する必要があるが、Pythonは、環境が整備されているので、プログラミングしやすい。Pythonの計算例を付録に例題を示す。<br>
+しかし、Pythonの計算速度はFortranやCと比較すると格段に遅い。大量の計算が必要な場合は、計算部分だけをFortranやCに変換する必要がある。
+
+<h3>5.	その他</h3>
+<h4>5.1.	HTMLの利用 </h4>
+計算用のWebページで右クリックして、「ページのソースの表示」をして、さらに右クリックで「名前を付けて保存」でダウンロードできる。<py-script>と</py-script>の間にpythonのコードが入っている。
+<h4>5.2.	日本語表示 </h4>
+プログラムは、極力英語で説明を書いた方が、汎用性が高い。どうしても日本語を含むファイルは時々エラーになる。その場合は以下の１行を先頭に挿入する。
+<div># -*- coding: ANSI -*-</div>
+
+
+<h3>参考文献</h3>
+<ol>
+<li> <a name="Downey_2015"></a>Allen Downey, “Think Python: How to Think Like a Computer Scientist”, 
+<li> <a name="Aikawa_2018"></a>相川利樹, 「Think Python:コンピュータサイエンティストのように考えてみよう第二版」、1の和訳
+<li> <a name="Nakakuki_2016"></a>中久喜健司、「科学技術計算のためのPython入門」、技術評論社(2016)
+<li> <a name="Pine_2014"></a>David J. Pine, "Introduction to Python for Science", 2014
+<li> <a name="Numpy"></a>NumPy, https://numpy.org/doc/stable/reference/
+<li> <a name="Scipy"></a>Scipy, https://scipy.org/
+<li> <a name="matplotlib"></a>matplotlib, https://matplotlib.org/stable/api/pyplot_summary.html
+</ol>
+
+<h3>付録  例題</h3> 
+ 部屋内に窒素ガスなどが放出されて、酸欠の危険性をチェックするプログラムを示します。 Fig. A-1 に示すモデルで、部屋V1の酸素濃度aはA1の式に示す微分方程式で表せる。ただし、部屋内のガスは瞬時に混合するものとする。
+\[ \frac{\partial a}{\partial t}=\frac{v_2\left(a0-a\right)-v_{3}a}{V_1} \tag{A1}\]
+ただし、<br>
+<table>
+  <tr><td>a: </td><td>&nbsp;</td> <td>酸素濃度 </td> </tr>
+  <tr><td>a0: </td><td>&nbsp;</td> <td>大気の酸素濃度 20.95% </td> </tr>
+  <tr><td>V1: </td><td>(m<sup>3</sup>)</td> <td>部屋の容量 </td> </tr>
+  <tr><td>V2: </td><td>(m<sup>3</sup>/s)</td> <td>換気による空気の流量 </td> </tr>
+  <tr><td>V3: </td><td>(m<sup>3</sup>/s)</td> <tdガス(窒素)の流量 </td> </tr>
+</table>
+<div style="text-align: center"><img src="fig/pythonnote1.gif" width="500"><br>
+  Fig. A-1 酸欠解析モデル </div>
+<div style="text-align: center"><img src="fig/pythonnote2.png" width="300"><br>
+  Fig. A-2 酸素ノードの時間変化 </div>
+ 
+以下にPythonを示す。
+<pre class="brush: alias">
+# Hypoxia (Oxygen concentration in room) by Python
+# 2022-6-28 Kiyoshi Yoshida
+from numpy import zeros
+import matplotlib.pyplot as plt
+print("Oxygen concentration in room")
+nmx = 4001       # Max. number of loop
+nsp = 10         # skip print
+nt = int(nmx/nsp)
+print("Max Dimensions: ", nt)
+xp = zeros(nt+1)    # Save Plot data in array in size of nlp
+yp = zeros(nt+1)
+v1 = 6000.0       # Volume of room (m3)
+v2 = 5.0          # Mass flow rate of air circulation (Nm3/s)
+v3 = 10.0         # Mass flow of gas jet (Helium) (Nm3/s)
+te = 150.0        # End time of gas jet (s)
+a0 = 0.20947      # Oxygen concentration in air
+b0 = 0.0          # Oxygen concentration in gas jet (N2) gas
+dt = 1.0          # Interval time of calculation loop (s)
+# initial
+v4 = v2 + v3
+a = a0
+b = b0
+t = 0.0
+ja = 0
+xp[0] = 0.0
+yp[0] = a0
+je = 0
+for j in range(nmx):
+    je = j
+    t = dt*j
+    jj = int(j/nsp)
+    v1o = v1*a
+    v2o = v2*a0
+    v3o = v3*b
+    da = (v2*dt*(a0-a)-v3*dt*a)/v1     # Oxygen concentration
+    a = a + da
+    v4o = v4*a*dt
+    if t > te:
+        v3 = 0.0      # stop flow
+    if int(j/nsp) > ja:
+        ja = jj
+        xp[jj] = t
+        yp[jj] = a
+        print("j,jj, xp,yp ", j, jj, t, a)
+print("Number of data: ", je+1)
+print("Elapse time (s):", t)
+plt.plot(xp, yp)     # Plot results
+plt.xlabel("Time (s)")
+plt.ylabel("O2 Percent")
+plt.show()
+</pre>
+
+<footer><a href="mailto:kiyoshi.yoshida@eagle.ocn.ne.jp">Questions to Kiyoshi Yoshida</a></div>
+
+</body>
+</html>
