@@ -1,11 +1,41 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>はじめてのサイト</title>
-</head>
+  <head>
+    <meta charset="utf-8">
+    <title>Coil Laboratory</title>
+    <meta name="author" content="Kiyoshi Yoshida">
+  <script>
+  </script>
+  </head>
 <body>
-  <h1>こんにちは！</h1>
-  <p>はじめてのホームページです。</p>
+  <header>
+      <center><h3>超伝導コイルの数値解析</h3></center>
+      <center>2023-2-21</center>
+      <center>吉田 清</center>
+      <center>kiyoshi.yoshida@eagle.ocn.ne.jp</center>
+      <hr noshade>
+  </header>
+    <div>超伝導コイルの設計に必要な数値解析について実例を含めて説明します。まず、任意形状なコイルから発生する磁場解析の方法を示します。また、超伝導コイルの設計で必要なごく低温ヘリウムの１次元圧縮性流体の解析について説明します。</div>
+   
+    <h4>磁場計算</h4>
+    <ul>
+      <li><a href="magfield/MagnetFieldWire.html">線電流による磁場解析</a></li>
+      <li><a href="magfield/MagnetFieldRect.html">矩形断面導体による磁場解析</a></li>
+      <li><a href="magfield/MagnetFieldReal.html">実用コイルの磁場解析</a></li>
+    </ul>
+    <h4>流体解析</h4>
+    <ul>
+      <li><a href="flow1d/Flow1dstd.html">定常１次元圧縮性流体</a></li>
+    </ul>
+    <h4>技術ノート</h4>
+    <ul>
+      <li><a href="note/PythonNote.html">Pythonの使い方</a></li>
+    </ul>
+<div style="text-align: center"><img src="fig/0itermag.gif" width="300"><br>
+Tokamak Magnet
+</div>
+<br>
+<footer><a href="mailto:kiyoshi.yoshida@eagle.ocn.ne.jp"> Questions to Kiyoshi Yoshida </a></div>
+</footer>
 </body>
 </html>
