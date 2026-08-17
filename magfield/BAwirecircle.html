@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Circular Ring</title>
+  <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+  <style>
+.contentA{ width: 500px; height: 300px;}
+.contentB{ width: 300px; height: 300px;}
+.main{ display: flex;}
+img.animated-gif{ width: 300px; height: auto;} 
+  </style>
+  <py-env>
+- numpy
+- scipy
+  </py-env>
+</head>
+
+<body>
+<header>
+  <div align="center"><h2> Magnetic Field and Vector Potential from Circular Wire Ring</h2></div> 
+  <center>2022-8-30 (R.1)</center>
+  <center>Kiyoshi Yoshida</center>
+  <center>kiyoshi.yoshida@eagle.ocn.ne.jp</center>
+  <br>
+</header>
+
+<div class="main">
+  <div class="contentA">
+    <table>
+    <tr><td>Radius</td>          <td><input type="text" id="radius" value="0.5"/></td> <td>(m)</td></tr>
+    <tr><td>Current</td>         <td><input type="text" id="current" value="1"/></td>  <td>(MA)</td></tr>
+    <tr><td>Radial Position</td> <td><input type="text" id="radial" value="0.01"/></td> <td>(m)</td></tr>
+    <tr><td>Axial Position</td>  <td><input type="text" id="axial" value="0.01"/></td><td>(m)</td></tr>
+    </table>
+    <button id="submit-button" type="submit" pys-onClick="main_1">Run</button>
+    <div id="msg1"></div>
+    <div id="msg2"></div>
+    <div id="msg3"></div>
+  </div>
+  <div class="contentB">
+    <img class="animated-gif" src=fig\11wirecircular.gif> 
+  </div>
+</div>
+
+<py-script>
+from scipy.special import ellipk, ellipe
+from numpy import abs, pi, sqrt
+small_dist = 1.00e-6
+
+def ba_wirecir(r, z, i, ra):  # Smythe
+    cn = i*1.0e-7
+    if r < small_dist:        # on axis
+        at = 0.0
+        br = 0.0
+        bz = 2.0*cn*pi*ra**2 / (z**2 + ra**2)**1.5
+    else:
+        if r==ra:
+            r= ra - small_dist
+        a2 = (ra + r)**2 + z**2
+        a1 = sqrt(a2)
+        b2 = (ra - r)**2 + z**2
+        k2 = 4.0*r*ra/a2
+        k1 = sqrt(k2)
+        km = float(ellipk(k2))   # K(m): Complete elliptic integral 1st
+        em = float(ellipe(k2))   # E(m): Complete elliptic integral 2nd
+        at = 4.0*cn/k1*sqrt(ra/r)*((1 - k2*0.50)*km - em)
+        br = 2.0*cn*z/(r*a1)*(-km + (ra**2 + r**2 + z**2)/b2*em)
+        bz = 2.0*cn/a1*(km + (ra**2 - r**2 - z**2)/b2*em)
+    return  br, bz, at
+
+def main_1(event):
+    ra = float(Element("radius").element.value)
+    ia = float(Element("current").element.value)*1.0e6
+    r = float(Element("radial").element.value)
+    z = float(Element("axial").element.value)
+    br, bz, at = ba_wirecir(r, z, ia, ra)
+    document.getElementById("msg1").innerHTML = "Br (T):   "+ str(br)    
+    document.getElementById("msg2").innerHTML = "Bz (T):   "+ str(bz)
+    document.getElementById("msg3").innerHTML = "At (Tm):  "+ str(at)    
+</py-script>
+
+<footer><a href="mailto:kiyoshi.yoshida@eagle.ocn.ne.jp">Questions to Kiyoshi Yoshida</a></div>
+</footer>
+</html>

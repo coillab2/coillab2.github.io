@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Circular Arc</title>
+  <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+  <style>
+.contentA{
+ width: 500px;
+ height: 500px;}
+.contentB{
+ width: 300px;
+ height: 500px;}
+.main{
+ display: flex;}
+img.animated-gif{
+  width: 300px;
+  height: auto;} 
+  </style>
+  <py-env>
+- numpy
+- scipy
+  </py-env>
+</head>
+
+<body>
+<header>
+  <div align="center"><h2> Magnetic Field and Vector Potential from Circular Wire Arc</h2></div> 
+  <center>2022-8-30 (R.1)</center>
+  <center>Kiyoshi Yoshida</center>
+  <center>kiyoshi.yoshida@eagle.ocn.ne.jp</center>
+  <br>
+</header>
+
+<div class="main">
+<div class="contentA">
+  <table>
+  <tr><td>Radius</td>   <td><input type="text" id="radius" value="0.5"/></td> <td>(m)</td></tr>
+  <tr><td>Current</td>  <td><input type="text" id="current" value="1"/></td>  <td>(MA)</td></tr>
+  <tr><td>Start th1</td> <td><input type="text" id="th1" value="0"/></td>  <td>(deg)</td></tr>
+  <tr><td>End th1</td>   <td><input type="text" id="th2" value="180"/></td>  <td>(deg)</td></tr>
+  <tr><td>Position X</td> <td><input type="text" id="xp" value="0.01"/></td> <td>(m)</td></tr>
+  <tr><td>Position Y</td> <td><input type="text" id="yp" value="0.01"/></td><td>(m)</td></tr>
+  <tr><td>Position z</td> <td><input type="text" id="zp" value="0.01"/></td><td>(m)</td></tr>
+  </table>
+  <button id="submit-button" type="submit" pys-onClick="main_1">Run</button>
+  <div id="msg1"></div>
+  <div id="msg2"></div>
+  <div id="msg3"></div>
+  <div id="msg4"></div>
+  <div id="msg5"></div>
+</div>
+<div class="contentB">
+  <img class="animated-gif" src=fig\11arcwire.gif> 
+</div>
+</div>
+
+<py-script>
+from scipy.special import ellipkinc, ellipeinc
+from numpy import abs, pi, sqrt, sin, cos, arctan2
+small_dist = 1.00e-6
+
+def ba_wirarc(x, y, z, ia, ra, p1, p2):    # Babic
+    r = sqrt(x**2 + y**2)
+    if r == ra:
+        return 0.0, 0.0, 0.0, 0.0, 0.0
+    if abs(r) < small_dist:
+        r = small_dist
+    pp = arctan2(y, x)
+    alp1 = (pi + pp - p1)*0.50
+    alp2 = (pi + pp - p2)*0.50
+    ca = 1.0e-7*ia
+    a2 = (ra + r)**2 + z**2
+    k2 = 4.0*ra*r/a2
+    k1 = sqrt(k2)
+    kd2 = 1.0 - k2
+    ke2 = k2 - 2.0
+    fe1 = ellipkinc(alp1, k2)  # Incomplete elliptic integral first
+    fe2 = ellipkinc(alp2, k2)
+    fed = fe2 - fe1
+    ee1 = ellipeinc(alp1, k2)  # Incomplete elliptic integral second
+    ee2 = ellipeinc(alp2, k2)
+    eed = ee2 - ee1
+    ih1 = sqrt(1.0 - k2*sin(alp1)**2)
+    ih2 = sqrt(1.0 - k2*sin(alp2)**2)
+    ihd = ih2 - ih1
+    ihe = 1.0/ih2 - 1.0/ih1
+    ig1 = sin(alp1)*cos(alp1)/ih1
+    ig2 = sin(alp2)*cos(alp2)/ih2
+    igd = ig2 - ig1
+    kfe = ke2*fed + 2.0*eed
+    ia = sqrt(ra/r)/(k1*r)
+    ax = -ca*ia*(y*kfe + 2.0*x*ihd)
+    ay = ca*ia*(x*kfe - 2.0*y*ihd)
+    kef = ke2*eed + 2.0*kd2*fed - k2*ke2*igd
+    ib = z*k1/(4.0*r**2*sqrt(ra*r)*kd2)
+    bx = ca*ib*(x*kef + 2.0*y*kd2*ihe)
+    by = ca*ib*(y*kef - 2.0*x*kd2*ihe)
+    ibz = (k2*(ra + r) - 2.0*r)*eed + 2.0*r*kd2*fed + k2*(2.0*r-(ra+r)*k2)*igd
+    bz = -ca*k1/(4.0*r*sqrt(ra*r)*kd2)*ibz
+    return bx, by, bz, ax, ay
+
+def main_1(event):
+    ia = float(Element("current").element.value)*1.0e6
+    ra = float(Element("radius").element.value)
+    p1 = float(Element("th1").element.value)*pi/180.0
+    p2 = float(Element("th2").element.value)*pi/180.0
+    xp = float(Element("xp").element.value)
+    yp = float(Element("yp").element.value)
+    zp = float(Element("zp").element.value)
+    bx, by, bz, ax, ay = ba_wirarc(xp, yp, zp, ia, ra, p1, p2)
+    document.getElementById("msg1").innerHTML = "Bx (T):   "+ str(bx)
+    document.getElementById("msg2").innerHTML = "By (T):   "+ str(by)
+    document.getElementById("msg3").innerHTML = "Bz (T):   "+ str(bz)
+    document.getElementById("msg4").innerHTML = "Ax (Tm):  "+ str(ax)
+    document.getElementById("msg5").innerHTML = "Ay (Tm):  "+ str(ay)
+</py-script>
+
+<footer><a href="mailto:kiyoshi.yoshida@eagle.ocn.ne.jp">Questions to Kiyoshi Yoshida</a></div>
+</footer>
+</html>

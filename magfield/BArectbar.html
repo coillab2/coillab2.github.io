@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Rectangular Bar</title>
+  <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+  <style>
+.contentA{ width: 500px;  height: 300px;}
+.contentB{ width: 300px;  height: 300px;}
+.main{ display: flex;}
+  </style>
+  <py-env>
+- numpy
+- scipy
+  </py-env>
+</head>
+
+<body>
+<header>
+    <div align="center"><h2> Magnetic Field and Vector Potential from Straight Bar</h2></div> 
+    <center>2022-8-30 (R.1)</center>
+    <center>Kiyoshi Yoshida</center>
+    <center>kiyoshi.yoshida@eagle.ocn.ne.jp</center>
+    <br>
+</header>
+
+<div class="main">
+    <div class="contentA">
+    <table>
+    <tr><td>Length lx</td> <td><input type="text" id="lx" value="0.2"/> </td> <td>(m)</td></tr>
+    <tr><td>Length ly</td> <td><input type="text" id="ly" value="0.2"/></td> <td>(m)</td></tr>
+    <tr><td>Length lz</td> <td><input type="text" id="lz" value="2"/></td> <td>(m)</td></tr>
+    <tr><td>Current</td>   <td><input type="text" id="current" value="1"/></td>  <td>(MA)</td></tr>    
+    <tr><td>Point x</td> <td><input type="text" id="xp" value="0.2"/></td>   <td>(m)</td></tr>
+    <tr><td>Point y</td> <td><input type="text" id="yp" value="0"/></td>   <td>(m)</td></tr>
+    <tr><td>Point z</td> <td><input type="text" id="zp" value="0"/></td>   <td>(m)</td></tr>
+    </table>
+    <button id="submit-button" type="submit" pys-onClick="main_1">Run</button>
+    <div id="msg1"></div>
+    <div id="msg2"></div>
+    <div id="msg3"></div>
+    
+    </div>
+    <div class="contentB">
+        <img src=fig\12barrectcal.gif> 
+    </div>
+</div>  
+
+<py-script>
+from numpy import abs, sqrt, log, arctan
+from scipy import integrate
+small_angl = 1.00e-6
+small_dist = 1.00e-6
+small_value = 1.00e-12
+
+def sgn(x):
+    if x>=0.0:
+        return 1.0
+    else:
+        return -1.0
+
+def b_bar(xp, yp, zp, lx, ly, lz, ja):    # Sackett
+    x1 = -lx * 0.5; x2 = lx * 0.5
+    y1 = -ly * 0.5; y2 = ly * 0.5
+    z1 = -lz * 0.5; z2 = lz * 0.5
+    jn = 1.0e-7 * ja
+    bxt = 0.0; byt = 0.0
+    for i in range(8):
+        if i == 0:
+            xi = x1; yj = y1; zk = z1
+        elif i == 1:
+            xi = x2; yj = y1; zk = z1
+        elif i == 2:
+            xi = x2; yj = y2; zk = z1
+        elif i == 3:
+            xi = x1; yj = y2; zk = z1
+        elif i == 4:
+            xi = x1; yj = y1; zk = z2
+        elif i == 5:
+            xi = x2; yj = y1; zk = z2
+        elif i == 6:
+            xi = x2; yj = y2; zk = z2
+        else:
+            xi = x1; yj = y2; zk = z2
+        x = xp - xi
+        y = yp - yj
+        z = zp - zk
+        if abs(x) < small_value:
+            x = small_dist
+        if abs(y) < small_value:
+            y = small_dist
+        if abs(z) < small_value:
+            z = small_dist
+        r = sqrt(x**2 + y**2 + z**2)
+        bx0 = z*log(r + x) + x*log(r + z) - y*arctan((x*r + x**2 + y**2)/(y*z))
+        by0 = z*log(r + y) + y*log(r + z) - x*arctan((y*r + x**2 + y**2)/(x*z))
+        sg = sgn(xi * yj * zk)
+        bxt = bxt - sg*bx0
+        byt = byt + sg*by0
+    bx = jn*bxt
+    by = jn*byt
+    return bx, by
+
+def abarfn(z, x, y, zp):
+    s = zp - z
+    ys = y*s
+    if abs(ys) < small_value:
+        ys = small_value
+    af = s*arctan((x*sqrt(x**2 + y**2 + s**2) + x**2 + s**2)/ys)
+    return af
+
+def a_bar(xp, yp, zp, lx, ly, lz, ja):  # Sackett
+    x1 = -lx * 0.5; x2 = lx * 0.5
+    y1 = -ly * 0.5; y2 = ly * 0.5
+    z1 = -lz * 0.5; z2 = lz * 0.5
+    jn = 1.0e-7 * ja
+    azt1 = 0.0
+    for j in range(8):
+        if j == 0:
+            xi = x1; yj = y1; zk = z1
+        elif j == 1:
+            xi = x2; yj = y1; zk = z1
+        elif j == 2:
+            xi = x2; yj = y2; zk = z1
+        elif j == 3:
+            xi = x1; yj = y2; zk = z1
+        elif j == 4:
+            xi = x1; yj = y1; zk = z2
+        elif j == 5:
+            xi = x2; yj = y1; zk = z2
+        elif j == 6:
+            xi = x2; yj = y2; zk = z2
+        else:
+            xi = x1; yj = y2; zk = z2
+        x = xp - xi
+        y = yp - yj
+        z = zp - zk
+        if abs(x) < small_dist:
+            x = small_dist
+        r = sqrt(x**2 + y**2 + z**2)
+        a01 = y*z*log(r + x) + x*z*log(r + y) + 2.0*x*y*log(r + z)
+        a02 = y**2*arctan((x*r + x**2 + y**2)/(y*z))
+        a03 = x**2*arctan((y*r + x**2 + y**2)/(x*z))
+        a0 = a01 - a02 - a03
+        sg = sgn(xi*yj*zk)
+        azt1 = azt1 - sg * a0
+    azt2 = 0.0
+    for j in range(4):
+        if j == 0:
+            xi = x1; yj = y1
+        elif j == 1:
+            xi = x2; yj = y1
+        elif j == 2:
+            xi = x2; yj = y2
+        else:
+            xi = x1; yj = y2
+        x = xp - xi
+        y = yp - yj
+        a, e = integrate.quad(abarfn, z1, z2, args=(x, y, zp))
+        sg = sgn(xi*yj)
+        azt2 = azt2 + sg*a
+    az = jn*(azt1 - azt2)
+    return az
+
+def main_1(event):
+    lx = float(Element("lx").element.value)
+    ly = float(Element("ly").element.value)
+    lz = float(Element("lz").element.value)
+    ia = float(Element("current").element.value)*1.0e6
+    xp = float(Element("xp").element.value)
+    yp = float(Element("yp").element.value)
+    zp = float(Element("zp").element.value)
+    ja = ia/(lx*ly)
+    bx, by =  b_bar(xp, yp, zp, lx, ly, lz, ja)
+    az = a_bar(xp, yp, zp, lx, ly, lz, ja) 
+    document.getElementById("msg1").innerHTML = "Bx (T):   "+ str(bx)    
+    document.getElementById("msg2").innerHTML = "By (T):   "+ str(by)
+    document.getElementById("msg3").innerHTML = "Az (Tm):  "+ str(az)    
+</py-script>
+
+<footer><a href="mailto:kiyoshi.yoshida@eagle.ocn.ne.jp">Questions to Kiyoshi Yoshida</a></div>
+</body>
+</html>

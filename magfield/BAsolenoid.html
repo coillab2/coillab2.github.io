@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Solenoid</title>
+  <script defer src="https://pyscript.net/alpha/pyscript.js"></script>
+  <style>
+.contentA{
+ width: 500px;
+ height: 300px;}
+.contentB{
+ width: 300px;
+ height: 300px;}
+.main{
+ display: flex;}
+  </style>
+  <py-env>
+- numpy
+- scipy
+  </py-env>
+</head>
+
+<body>
+<header>
+    <div align="center"><h2> Magnetic Field and Vector Potential from Solenoid</h2></div> 
+    <center>2022-8-30 (R.1)</center>
+    <center>Kiyoshi Yoshida</center>
+    <center>kiyoshi.yoshida@eagle.ocn.ne.jp</center>
+    <br>
+</header>
+
+<div class="main">
+<div class="contentA">
+  <table>
+  <tr><td>Radius a</td>        <td><input type="text" id="radius" value="0.5"/></td> <td>(m)</td></tr>
+  <tr><td>Radial Width Wr</td> <td><input type="text" id="wr" value="0.1"/></td> <td>(m)</td></tr>
+  <tr><td>Axial Length Wz</td> <td><input type="text" id="wz" value="0.5"/></td> <td>(m)</td></tr>
+  <tr><td>Current</td>         <td><input type="text" id="current" value="1"/></td> <td>(MA)</td></tr>    
+  <tr><td>Radial Position</td> <td><input type="text" id="radial" value="0.1"/></td><td>(m)</td></tr>
+  <tr><td>Axial Position</td>  <td><input type="text" id="axial" value="0.1"/></td> <td>(m)</td></tr>
+  </table>
+  <button id="submit-button" type="submit" pys-onClick="main_2">Run</button>
+  <div id="msg1"></div>
+  <div id="msg2"></div>
+  <div id="msg3"></div>
+</div>
+<div class="contentB">
+    <img src=fig\12solenoid2.gif> 
+</div>
+
+<py-script>
+from numpy import abs, pi, sqrt, log, arctan, sin, cos
+from scipy import integrate
+small_angl = 1.00e-6
+small_dist = 1.00e-6
+small_value = 1.00e-12
+
+def sgn(x):
+    if x>=0.0:
+        return 1.0
+    else:
+        return -1.0
+
+def ba0zs(r1, r2, lg, rp, zp):
+    r0 = 0.5*(r1 + r2)
+    s= 0.0
+    for i in range (4):
+        if i==0:
+            r = r1; z = - 0.5*lg
+        elif i==1:
+            r = r1; z =  0.5*lg
+        elif i==2:
+            r = r2; z =  0.5*lg
+        elif i==3:
+            r = r2; z = - 0.5*lg
+        zj = zp - z
+        rj = sqrt(rp**2 + r**2 - 2.0*rp*r + zj**2)
+        sg = sgn(z*(r0 - r))
+        s += sg*zj*log(rj + r)
+    b= 2.0*pi*s
+    return b
+
+def bar(t,r1,r2,lg,xp,zp):
+    r0 = 0.5*(r1 + r2)
+    co = cos(t)
+    s = 0.0
+    for i in range(4):
+        if i==0:
+            r = r1; z = -0.5*lg
+        elif i==1:
+            r = r1; z = 0.5*lg
+        elif i==2:
+            r = r2; z = 0.5*lg
+        elif i==3:
+            r = r2; z = -0.5*lg
+        if abs(z) < small_dist:
+            z = small_dist    # to avoid divergence
+        zj = zp - z
+        rj = sqrt(xp**2 + r**2 - 2.0*xp*r*co + zj**2)
+        sg = sgn(z*(r0 - r) )
+        s += sg*(rj + xp*co*log(rj + r - xp*co))*co
+    s = -s
+    return s
+
+def baz(t, r1, r2, lg, xp, zp):
+    r0 = 0.50*(r1 + r2)
+    co = cos(t)
+    si = sin(t)
+    s = 0.0
+    for i in range(4):
+        if i==0:
+            r = r1; z = -0.5*lg
+        elif i==1:
+            r = r1; z = 0.5*lg
+        elif i==2:
+            r = r2; z = 0.5*lg
+        elif i==3:
+            r = r2; z = -0.5*lg
+        if abs(z) < small_dist:
+            z = small_dist    # to avoid divergence
+        zj = zp - z
+        rj = sqrt( xp**2 + r**2 - 2.0*xp*r*co + zj**2)
+        a = zj*(r - xp*co)/(rj*xp*si)
+        sg = sgn(z*(r0 - r) )
+        s += sg*(xp*si*arctan(a) - zj*log(rj + r - xp*co) + xp*co*log(rj + zj))
+    s = -s
+    return s
+
+def aat(t, r1, r2, lg, xp, zp):
+    r0 = 0.50*(r1 + r2)
+    co = cos(t)
+    si = sin(t)
+    s = 0.00
+    for i in range(4):
+        if i==0:
+            r = r1; z = -0.5*lg
+        elif i==1:
+            r = r1; z = 0.5*lg
+        elif i==2:
+            r = r2; z = 0.5*lg
+        elif i==3:
+            r = r2; z = -0.5*lg
+        zj = zp - z
+        rj = sqrt(xp**2 + r**2 - 2.0*xp*r*co + zj**2)
+        b = ((xp*co - r)*rj - xp**2 - r**2 + 2.0*xp*r*co)/(zj*xp*si)
+        sg = sgn(z*(r0 - r))
+        s += sg*(zj*rj*0.50 + zj*xp*co*log(rj + r - xp*co)  \
+           + (r**2*0.50 + xp**2*0.50 - xp**2*co**2) * log(rj + zj) + \
+           + xp**2*si*co*arctan(b))*co           
+    return s
+
+def ba_sole(rp, zp, ra, wr, lz, cd):
+    r1 = ra - wr*0.5
+    r2 = ra + wr*0.5
+    cc = 1.0e-7*cd     
+    t1 = small_angl
+    t2 = 2.0*pi - small_angl     
+    e = 0.0
+    if r1 > r2:
+        print('**ERROR at basole(), r1 < r2: ', r1, r2)
+        br = bz = 0.0
+        return br, bz
+    if(abs(rp) < small_dist) :           
+        at = 0.0
+        br = 0.0
+        bz = cc * ba0zs(r1, r2, lz, rp, zp)
+    elif abs(zp) < small_dist:              
+        a, e = integrate.quad(aat, t1, t2, args=(r1, r2, lz, rp, zp))
+        at = cc * a
+        br = 0.0
+        b, e = integrate.quad(baz, t1, t2, args=(r1, r2, lz, rp, zp))
+        bz = cc * b
+    else:   # at any place
+        a, e = integrate.quad(aat, t1, t2, args=(r1, r2, lz, rp, zp))
+        at = cc * a
+        b, e = integrate.quad(bar, t1, t2, args=(r1, r2, lz, rp, zp))
+        br = cc * b
+        b, e = integrate.quad(baz, t1, t2, args=(r1, r2, lz, rp, zp))
+        bz = cc * b
+    return br, bz, at
+
+def main_2(event):
+    ra = float(Element("radius").element.value)
+    wr = float(Element("wr").element.value)
+    wz = float(Element("wz").element.value)
+    ia = float(Element("current").element.value)*1.0e6
+    rp = float(Element("radial").element.value)
+    zp = float(Element("axial").element.value)
+    ja = ia/(wr*wz)
+    br, bz, at = ba_sole(rp, zp, ra, wr, wz, ja)
+    document.getElementById("msg1").innerHTML = "Br (T):   "+ str(br)    
+    document.getElementById("msg2").innerHTML = "Bz (T):   "+ str(bz)
+    document.getElementById("msg3").innerHTML = "At (Tm):  "+ str(at)    
+</py-script>
+</div>
+<footer><a href="mailto:kiyoshi.yoshida@eagle.ocn.ne.jp">Questions to Kiyoshi Yoshida</a></div>
+</body>
+</html>
